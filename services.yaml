@@ -1,0 +1,3 @@
+refresh:
+  name: Refresh parcels
+  description: Force an immediate refresh of all Parcel App deliveries.
