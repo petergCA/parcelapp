@@ -1,0 +1,21 @@
+Below is a summart of changes made to the card in descending order:
+
+
+20260408
+**__init__.py
+
+- Added _LOGGER (it had none)
+- async_setup_entry now logs error with exc_info=True before raising ConfigEntryNotReady — you'll see the full traceback in the HA log, not just the wrapped message
+
+**coordinator.py
+
+- Split the single except Exception into specific cases: timeout, connection error, unexpected error
+- HTTP non-2xx responses now log the status code and the first 500 chars of the response body — often the API returns a JSON error message explaining what's wrong
+- JSON parse failures log the raw body so you can see what the API actually returned
+- Unexpected deliveries shape (e.g. null or an object) is caught and logged
+- A debug line on success logs the delivery count (visible when you enable debug logging for the domain)
+
+**sensor.py
+
+- Added _LOGGER
+- The silent except Exception: pass on date parsing now logs a warning with the bad value and tracking number, so you can tell if a specific carrier is returning a date format we don't handle

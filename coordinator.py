@@ -128,24 +128,56 @@ class ParcelDataCoordinator(DataUpdateCoordinator):
                     timeout=10,
                 )
             )
+        except requests.exceptions.Timeout:
+            _LOGGER.error("Parcel API request timed out after 10 s")
+            raise UpdateFailed("Parcel API request timed out")
+        except requests.exceptions.ConnectionError as err:
+            _LOGGER.error("Parcel API connection error: %s", err)
+            raise UpdateFailed(f"Parcel API connection error: {err}")
+        except Exception as err:
+            _LOGGER.error("Unexpected error during Parcel API request: %s", err, exc_info=True)
+            raise UpdateFailed(f"Unexpected request error: {err}")
 
+        if not response.ok:
+            _LOGGER.error(
+                "Parcel API returned HTTP %s — body: %s",
+                response.status_code,
+                response.text[:500],
+            )
             response.raise_for_status()
 
-            deliveries = response.json().get("deliveries", [])
-            now = datetime.now()
-
-            for d in deliveries:
-                # Normalize latest_event consistently (helps the card)
-                events = d.get("events") or []
-                if isinstance(events, list) and events:
-                    d["latest_event"] = events[0].get("event") or events[0].get("description")
-                else:
-                    d["latest_event"] = d.get("latest_event")
-
-                # Force our computed delivered value (overrides API mistakes)
-                d["delivered"] = _compute_delivered(d, now)
-
-            return deliveries
-
+        try:
+            payload = response.json()
         except Exception as err:
-            raise UpdateFailed(f"Error fetching parcel data: {err}")
+            _LOGGER.error(
+                "Parcel API response is not valid JSON (status %s) — body: %s",
+                response.status_code,
+                response.text[:500],
+            )
+            raise UpdateFailed(f"Invalid JSON from Parcel API: {err}")
+
+        deliveries = payload.get("deliveries", [])
+        if not isinstance(deliveries, list):
+            _LOGGER.error(
+                "Parcel API 'deliveries' field is not a list, got %s — full payload: %s",
+                type(deliveries).__name__,
+                str(payload)[:500],
+            )
+            raise UpdateFailed("Unexpected payload shape from Parcel API")
+
+        _LOGGER.debug("Parcel API returned %d deliveries", len(deliveries))
+
+        now = datetime.now()
+
+        for d in deliveries:
+            # Normalize latest_event consistently (helps the card)
+            events = d.get("events") or []
+            if isinstance(events, list) and events:
+                d["latest_event"] = events[0].get("event") or events[0].get("description")
+            else:
+                d["latest_event"] = d.get("latest_event")
+
+            # Force our computed delivered value (overrides API mistakes)
+            d["delivered"] = _compute_delivered(d, now)
+
+        return deliveries

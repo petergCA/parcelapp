@@ -1,6 +1,9 @@
+import logging
 from datetime import datetime
 
 from homeassistant.components.sensor import SensorEntity
+
+_LOGGER = logging.getLogger(__name__)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -49,8 +52,13 @@ class ParcelSummarySensor(CoordinatorEntity, SensorEntity):
                     days_to_delivery = (
                         expected_date - datetime.now().date()
                     ).days
-                except Exception:
-                    pass
+                except Exception as err:
+                    _LOGGER.warning(
+                        "Could not parse date_expected %r for tracking %r: %s",
+                        expected,
+                        delivery.get("tracking_number"),
+                        err,
+                    )
 
             events = delivery.get("events") or []
 
