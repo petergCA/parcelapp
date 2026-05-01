@@ -1,4 +1,5 @@
 import logging
+import os
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.config_entries import ConfigEntry
@@ -21,6 +22,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         SERVICE_REFRESH,
         handle_refresh,
     )
+
+    images_path = os.path.join(os.path.dirname(__file__), "parcel_app_images")
+    hass.http.register_static_path("/parcelapp/images", images_path, cache_headers=True)
+    _LOGGER.debug("Registered static path /parcelapp/images -> %s", images_path)
 
     return True
 
