@@ -4,6 +4,7 @@ import os
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.components.http import StaticPathConfig
 
 from .const import DOMAIN, SERVICE_REFRESH
 from .coordinator import ParcelDataCoordinator
@@ -24,7 +25,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     )
 
     images_path = os.path.join(os.path.dirname(__file__), "parcel_app_images")
-    hass.http.register_static_path("/parcelapp/images", images_path, cache_headers=True)
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig("/parcelapp/images", images_path, cache_headers=True)]
+    )
     _LOGGER.debug("Registered static path /parcelapp/images -> %s", images_path)
 
     return True
