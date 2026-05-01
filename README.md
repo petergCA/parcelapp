@@ -6,7 +6,6 @@ A Home Assistant integration that pulls your active deliveries from [Parcel App]
 
 You will also need a Parcel App premium sunscription to use these features - it is $5 per month available at the above website. This integration is not affiliated with Parcerl App - just a passionate user who wanted to track their deliveries in Home Assistant.
 
-
 ## Features
 
 - Single `sensor.parcel_deliveries` entity — state is the count of active deliveries
