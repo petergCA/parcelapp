@@ -35,11 +35,6 @@ NOT_DELIVERED_CONTAINS = (
     "one business day later",
 )
 
-# If your upstream has a reliable delivered code, put it here.
-# If you're not sure, leave this set empty and delivery will rely on event phrases only.
-DELIVERED_STATUS_CODES = set()  # e.g. {5, "delivered"}
-
-
 def _coerce_int(value):
     try:
         return int(value)
@@ -71,9 +66,17 @@ def _latest_event_text(delivery: dict) -> str:
 
 def _compute_delivered(delivery: dict, now: datetime) -> bool:
     """
-    Robust delivered calculation to avoid false positives like:
+    Robust delivered calculation. status_code == 0 is the primary signal per the
+    Parcel API docs (https://parcelapp.net/help/api-view-deliveries.html). Event
+    phrase matching is a fallback for carriers whose status codes aren't normalised.
+    Guards against false positives like:
     'Your package will be delivered one business day later than expected.'
     """
+
+    # Primary signal: API-authoritative — status_code 0 means completed delivery
+    status_code = _coerce_int(delivery.get("status_code"))
+    if status_code == 0:
+        return True
 
     # Guard 1: if expected delivery is in the future, it cannot be delivered
     dt_expected = _parse_date_expected(delivery.get("date_expected"))
@@ -85,19 +88,12 @@ def _compute_delivered(delivery: dict, now: datetime) -> bool:
     if days is not None and days >= 0:
         return False
 
-    # Strong signal: known delivered status code (optional)
-    status_code = delivery.get("status_code")
-    if status_code in DELIVERED_STATUS_CODES:
-        return True
-
-    # Event-based signal: exact phrase match only (NO substring "delivered" checks)
+    # Fallback: event phrase match (exact only, no substring "delivered" checks)
     latest = _latest_event_text(delivery).lower().strip()
 
-    # If latest contains common "not delivered" phrases, force false
     if any(bad in latest for bad in NOT_DELIVERED_CONTAINS):
         return False
 
-    # Exact match only
     if latest in DELIVERED_EXACT_PHRASES:
         return True
 
