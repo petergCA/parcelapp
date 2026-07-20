@@ -18,14 +18,18 @@ CARD_URL = "/parcelapp/parcelapp_card.js"
 async def _async_register_card(hass: HomeAssistant) -> None:
     """Register the bundled Lovelace card as a dashboard resource."""
     lovelace = hass.data.get("lovelace")
-    if lovelace is None or getattr(lovelace, "mode", None) != "storage":
+    resources = getattr(lovelace, "resources", None)
+    # YAML-mode resource collections are read-only (no async_create_item).
+    # Duck-type instead of checking lovelace.mode — HA 2026.7 renamed that
+    # attribute to resource_mode.
+    if resources is None or not hasattr(resources, "async_create_item"):
         _LOGGER.warning(
-            "Lovelace is in YAML mode; add %s as a dashboard resource manually",
+            "Lovelace resources are YAML-managed; add %s as a dashboard "
+            "resource manually",
             CARD_URL,
         )
         return
 
-    resources = lovelace.resources
     if not resources.loaded:
         await resources.async_load()
         resources.loaded = True
