@@ -2,9 +2,9 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
-A Home Assistant integration that pulls your active deliveries from [Parcel App](https://parcelapp.net) and exposes them as a sensor with full delivery detail attributes.
+A Home Assistant integration that pulls your active deliveries from [Parcel App](https://parcelapp.net) and exposes them as a sensor with full delivery detail attributes — plus a bundled Lovelace dashboard card, so one install gives you both the data and the UI.
 
-You will also need a Parcel App premium sunscription to use these features - it is $5 per month available at the above website. This integration is not affiliated with Parcerl App - just a passionate user who wanted to track their deliveries in Home Assistant.
+A Parcel App premium subscription is required for API access (see their website for pricing). This integration is not affiliated with Parcel App — just built by a passionate user who wanted to track their deliveries in Home Assistant.
 
 ## Features
 
@@ -88,6 +88,8 @@ service: parcelapp.refresh
 The integration ships with the **ParcelApp Card** — a Lovelace card with carrier icons, delivery timeline, and tap-to-expand event history. It is served at `/parcelapp/parcelapp_card.js` and registered as a dashboard resource automatically on startup (storage-mode dashboards; YAML-mode users add the resource manually). No separate install needed.
 
 > **Upgrading from the standalone card?** If you previously installed [parcelapp_card](https://github.com/petergCA/parcelapp_card) via HACS, remove it there (HACS also removes its resource entry) — the bundled card replaces it.
+
+If the dashboard shows **"Custom element doesn't exist: parcelapp-card"**, make sure you are on v0.2.1 or later (v0.2.0 failed to register the card resource on Home Assistant 2026.7+), restart Home Assistant, and hard-refresh the browser (Ctrl/Cmd+Shift+R).
 
 ```yaml
 type: custom:parcelapp-card
