@@ -8,6 +8,7 @@ You will also need a Parcel App premium sunscription to use these features - it 
 
 ## Features
 
+- **Bundled Lovelace card** (`custom:parcelapp-card`) — installed and registered automatically, no separate download
 - Single `sensor.parcel_deliveries` entity — state is the count of active deliveries
 - Full delivery attributes per package: tracking number, carrier, description, expected date, days to delivery, event timeline
 - Robust delivered detection that avoids false positives (e.g. "will be delivered one business day later" is not treated as delivered)
@@ -82,11 +83,31 @@ automation:
 service: parcelapp.refresh
 ```
 
-## Usage with the ParcelApp Card
+## Bundled Dashboard Card
 
-Install the companion [ParcelApp Card](https://github.com/petergCA/parcelapp_card) for a rich Lovelace dashboard UI with carrier icons, timeline, and tap-to-expand details.
+The integration ships with the **ParcelApp Card** — a Lovelace card with carrier icons, delivery timeline, and tap-to-expand event history. It is served at `/parcelapp/parcelapp_card.js` and registered as a dashboard resource automatically on startup (storage-mode dashboards; YAML-mode users add the resource manually). No separate install needed.
+
+> **Upgrading from the standalone card?** If you previously installed [parcelapp_card](https://github.com/petergCA/parcelapp_card) via HACS, remove it there (HACS also removes its resource entry) — the bundled card replaces it.
 
 ```yaml
 type: custom:parcelapp-card
 entity: sensor.parcel_deliveries
 ```
+
+### Card options
+
+| Option | Default | Description |
+|---|---|---|
+| `entity` | *(required)* | The `sensor.parcel_deliveries` entity |
+| `title` | `"Parcel Deliveries"` | Card header text |
+| `hide_delivered` | `false` | Hide delivered items entirely |
+| `show_today_only` | `false` | Show only items arriving today |
+| `show_icon` | `true` | Show carrier icon |
+| `show_description` | `true` | Show package description |
+| `show_status` | `true` | Show latest tracking event text |
+| `show_timing` | `true` | Show days-until-delivery line |
+| `show_events` | `true` | Enable tap-to-expand event timeline |
+| `highlight_today` | `true` | Highlight today's deliveries with a colored border |
+| `max_items` | *(no limit)* | Maximum number of rows to display |
+| `sort` | `"soonest"` | Sort order: `soonest`, `today`, or `carrier` |
+| `compact` | `false` | Use compact row height |

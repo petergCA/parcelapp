@@ -1,8 +1,9 @@
 {
   "domain": "parcelapp",
   "name": "Parcel App Delivery Tracker",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "requirements": ["requests"],
+  "dependencies": ["http", "lovelace"],
   "config_flow": true,
   "documentation": "https://parcelapp.net/help/api-view-deliveries.html",
   "iot_class": "cloud_polling",
