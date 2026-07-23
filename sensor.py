@@ -79,6 +79,15 @@ class ParcelSummarySensor(CoordinatorEntity, SensorEntity):
             # Trust coordinator logic
             delivered = delivery.get("delivered", False)
 
+            # Out for delivery (status_code 4) means it's on the truck today,
+            # even when the carrier stops reporting date_expected (seen with FedEx).
+            try:
+                out_for_delivery = int(delivery.get("status_code")) == 4
+            except (TypeError, ValueError):
+                out_for_delivery = False
+            if not delivered and out_for_delivery:
+                days_to_delivery = 0
+
             parsed.append(
                 {
                     "tracking_number": delivery.get("tracking_number"),

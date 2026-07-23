@@ -12,6 +12,10 @@ from .const import API_URL, DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+# Module-level so the cooldown survives config-entry setup retries/reloads.
+# Parcel API allows 20 requests/hour; hammering after a 429 extends the ban.
+_RATE_LIMITED_UNTIL = None
+
 # Only treat these as "delivered" when the latest event matches EXACTLY (case-insensitive)
 DELIVERED_EXACT_PHRASES = {
     "delivered",
@@ -112,6 +116,16 @@ class ParcelDataCoordinator(DataUpdateCoordinator):
         self.filter_mode = filter_mode
 
     async def _async_update_data(self):
+        global _RATE_LIMITED_UNTIL
+        if _RATE_LIMITED_UNTIL and datetime.now() < _RATE_LIMITED_UNTIL:
+            _LOGGER.debug(
+                "Parcel API in rate-limit cooldown until %s; serving cached data",
+                _RATE_LIMITED_UNTIL,
+            )
+            if self.data is not None:
+                return self.data
+            raise UpdateFailed("Parcel API rate limited; waiting out cooldown")
+
         headers = {"api-key": self.api_key}
         params = {"filter_mode": self.filter_mode}
 
@@ -133,6 +147,16 @@ class ParcelDataCoordinator(DataUpdateCoordinator):
         except Exception as err:
             _LOGGER.error("Unexpected error during Parcel API request: %s", err, exc_info=True)
             raise UpdateFailed(f"Unexpected request error: {err}")
+
+        if response.status_code == 429:
+            _RATE_LIMITED_UNTIL = datetime.now() + timedelta(minutes=45)
+            _LOGGER.warning(
+                "Parcel API rate limited (429); pausing polls until %s",
+                _RATE_LIMITED_UNTIL,
+            )
+            if self.data is not None:
+                return self.data
+            raise UpdateFailed("Parcel API rate limited (429)")
 
         if not response.ok:
             _LOGGER.error(
