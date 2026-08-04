@@ -588,6 +588,8 @@
       if (code === "gso") return `${base}/gls.png`;
       if (code === "yun" || code === "yunexpress") return `${base}/yunexpress.png`;
       if (code === "veho") return `${base}/veho.png`;
+      if (code === "cp") return `${base}/canadapost.png`;
+      if (code === "aliex") return `${base}/aliexpress.png`;
 
       return `${base}/package.png`;
     }
